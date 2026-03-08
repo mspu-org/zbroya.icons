@@ -3,3 +3,4 @@ numpy
 jinja2
 pydantic
 opencv-python
+tkinterdnd2

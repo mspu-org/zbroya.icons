@@ -1,80 +1,51 @@
 ﻿# zbroya.icons
 
-One-command pipeline for extending an icon pack from a reference style set.
+Desktop app for iterative icon-pack extension.
 
-## Desktop UI (Recommended)
-
-Run from source:
+## Run Desktop UI
 
 ```bash
 python -m app.main desktop --config ./config.json --output-root ./output
 ```
 
-In UI you can:
-- set reference image and entities
-- run new iterations
-- review per-icon quality status
-- inspect debug intermediates (`gray`, `mask_raw`, `mask_clean`, `crop`, `norm`)
-- open preview HTML, output folder, ZIP
+## What is now implemented
 
-## Build Windows EXE
+- OpenAI-ready generation flow in GUI (provider/model/API key controls)
+- Iteration sessions list and run log
+- Quality tables with dedicated `Needs cleanup` tab
+- Intermediate debug stage viewer (`gray`, `mask_raw`, `mask_clean`, `crop`, `norm`)
+- Side-by-side preview: source PNG vs SVG-render preview
+- Manual curation in GUI:
+  - drag-and-drop SVG override (when `tkinterdnd2` available)
+  - file-picker override fallback
+  - one-click `Rebuild Preview` without full rerun
+- Auto-retry for `bad_trace` in curated mode using stricter cleanup/vectorization settings
 
-Build command:
+## OpenAI setup
 
-```powershell
-.\build-exe.ps1
-```
+1. Put API key in GUI field `OpenAI API key` (or env var `OPENAI_API_KEY`).
+2. In GUI select provider `openai` and model (default `gpt-image-1`).
+3. Run iteration.
 
-Output executable:
-- `dist\IconPackStudio.exe`
-
-No console window, full GUI app.
-
-## CLI One-Click
+## CLI One-Click (still available)
 
 ```bash
 python -m app.main one-click --reference ./assets/base_pack/reference_grid.png --entities "Defense Equipment Manufacturer; Defence Tech Startup; Dual-Use Technology"
 ```
 
-Or PowerShell wrapper:
+## Build Windows EXE
 
 ```powershell
-.\Start-IconPreview.ps1 -Reference .\assets\base_pack\reference_grid.png -EntitiesFile .\assets\examples\new_icons.txt
+.\build-exe.ps1
 ```
 
-## Generation Providers
+Output:
+- `dist\IconPackStudio.exe`
 
-Configure in `config.json`:
-- `generation.provider = "mock"` for local deterministic demo
-- `generation.provider = "openai"` for real image generation
+## Manual override path
 
-For OpenAI provider, set API key env var before run:
-
-```powershell
-$env:OPENAI_API_KEY = "<your_api_key>"
-```
-
-Then set in `config.json`:
-
-```json
-"generation": {
-  "provider": "openai",
-  "openai_model": "gpt-image-1",
-  "openai_base_url": "https://api.openai.com/v1",
-  "openai_api_key_env": "OPENAI_API_KEY"
-}
-```
-
-## Iteration Loop
-
-1. Generate a new iteration (Desktop UI or CLI).
-2. Open `output/<session>/preview.html`.
-3. If needed, put manual SVG override to `output/<session>/curated_svgs/<slug>.svg`.
-4. Rebuild preview only:
-
-```bash
-python -m app.main preview --config ./config.json --reference ./assets/base_pack/reference_grid.png --output ./output/<session>
-```
+For selected session + slug, curated SVG is stored as:
+- `output/<session>/curated_svgs/<slug>.svg`
 
 ## Requirements
 
@@ -83,4 +54,4 @@ python -m app.main preview --config ./config.json --reference ./assets/base_pack
 
 ## Note
 
-OpenAI provider currently applies style via prompting constraints; it does not upload reference images directly in this endpoint path.
+OpenAI provider currently enforces style through prompting constraints; reference image is used as style context in pipeline metadata but not directly uploaded in this endpoint path.

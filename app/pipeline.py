@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 from .config import AppConfig
@@ -34,6 +35,27 @@ def _classify(metrics: QualityMetrics, cfg: AppConfig) -> str:
     return "good"
 
 
+def _quality_rank(status: str) -> int:
+    if status == "good":
+        return 3
+    if status == "needs_cleanup":
+        return 2
+    return 1
+
+
+def _build_metrics(preprocess_mask, vec, source_png: Path) -> QualityMetrics:
+    black_ratio = float((preprocess_mask > 0).sum() / preprocess_mask.size)
+    return QualityMetrics(
+        nodes=vec.nodes,
+        connected_regions=max(1, vec.contour_count - vec.hole_count),
+        small_holes=vec.hole_count,
+        compactness=compactness(preprocess_mask),
+        black_ratio=black_ratio,
+        raster_similarity=raster_similarity(preprocess_mask, source_png),
+        smoothness_proxy=max(0.0, min(1.0, 1.0 - vec.nodes / 5000.0)),
+    )
+
+
 def run_generate(
     cfg: AppConfig,
     reference: Path,
@@ -65,6 +87,7 @@ def run_vectorize(
     output_dir: Path,
     force: bool = False,
 ) -> list[IconManifestItem]:
+    logger = get_logger()
     requests = _load_requests(requests_path)
     generated_dir = output_dir / "generated_png"
     debug_dir = output_dir / "debug"
@@ -85,9 +108,6 @@ def run_vectorize(
         )
 
         out_svg = svg_dir / f"{req.slug}.svg"
-        if out_svg.exists() and not force:
-            # still re-read quality from preprocess for consistency
-            pass
         vec = vectorize_mask_to_svg(
             slug=req.slug,
             mask=preprocess.mask,
@@ -97,17 +117,46 @@ def run_vectorize(
             approx_epsilon=cfg.vectorization.approx_epsilon,
         )
 
-        black_ratio = float((preprocess.mask > 0).sum() / preprocess.mask.size)
-        metrics = QualityMetrics(
-            nodes=vec.nodes,
-            connected_regions=max(1, vec.contour_count - vec.hole_count),
-            small_holes=vec.hole_count,
-            compactness=compactness(preprocess.mask),
-            black_ratio=black_ratio,
-            raster_similarity=raster_similarity(preprocess.mask, png_path),
-            smoothness_proxy=max(0.0, min(1.0, 1.0 - vec.nodes / 5000.0)),
-        )
+        metrics = _build_metrics(preprocess.mask, vec, png_path)
         quality = _classify(metrics, cfg)
+
+        # Curated mode: automatic retry for bad traces with stricter cleanup.
+        if cfg.mode == "curated" and quality == "bad_trace":
+            preprocess_retry = preprocess_png(
+                png_path=png_path,
+                output_debug_dir=debug_dir,
+                canvas_size=cfg.generation.size,
+                padding_ratio=min(cfg.padding_ratio + 0.04, 0.2),
+                remove_components_below_area=max(80, cfg.cleanup.remove_components_below_area * 2),
+            )
+            retry_svg = svg_dir / f"{req.slug}.retry.svg"
+            vec_retry = vectorize_mask_to_svg(
+                slug=req.slug,
+                mask=preprocess_retry.mask,
+                output_svg=retry_svg,
+                viewbox_size=cfg.canvas_size,
+                fill_color=cfg.fill_color,
+                approx_epsilon=cfg.vectorization.approx_epsilon * 1.8,
+            )
+            metrics_retry = _build_metrics(preprocess_retry.mask, vec_retry, png_path)
+            quality_retry = _classify(metrics_retry, cfg)
+
+            prefer_retry = False
+            if _quality_rank(quality_retry) > _quality_rank(quality):
+                prefer_retry = True
+            elif metrics_retry.raster_similarity > metrics.raster_similarity + 0.05:
+                prefer_retry = True
+            elif metrics_retry.nodes < max(1, int(metrics.nodes * 0.7)):
+                prefer_retry = True
+
+            if prefer_retry:
+                shutil.copy2(retry_svg, out_svg)
+                metrics = metrics_retry
+                quality = quality_retry
+                logger.info("auto-retry improved trace for %s: %s -> %s", req.slug, "bad_trace", quality)
+
+            if retry_svg.exists():
+                retry_svg.unlink(missing_ok=True)
 
         items.append(
             IconManifestItem(
@@ -144,6 +193,7 @@ def run_preview(
         svg_path, overridden = choose_svg_for_preview(item.slug, generated_dir, curated_dir)
         if not svg_path.exists():
             continue
+
         svg_content = svg_path.read_text(encoding="utf-8")
         badge = "Manual override" if overridden else ("OK" if item.quality == "good" else "Needs cleanup")
         preview_items.append(
@@ -179,6 +229,9 @@ def run_preview(
         summary=summary,
     )
     build_preview_sheet(output_png=output_dir / "preview_sheet.png", icons=items, card_size=cfg.preview.card_size)
+
+    # Persist override flags and selected SVG paths for GUI/CLI refreshes.
+    Manifest(reference=str(reference), icons=items).write(manifest_path)
     return output_dir / "preview.html"
 
 
@@ -204,5 +257,7 @@ def run_full(
 
     run_preview(cfg, reference, output_dir, items=items)
     run_package(output_dir)
-    manifest.write(output_dir / "manifest.json")
-    return manifest
+
+    # Re-read manifest to ensure persisted override fields are reflected.
+    manifest_data = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+    return Manifest.model_validate(manifest_data)
