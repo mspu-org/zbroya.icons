@@ -2,28 +2,32 @@
 
 One-command pipeline for extending an icon pack from a reference style set.
 
-## Zero-Complexity Mode (Recommended)
+## Desktop UI (Recommended)
 
-Give:
-1. Base icon set PNG/SVG (`--reference`)
-2. Free-form entities text (`--entities` or `--entities-file`)
+Launch desktop app:
 
-Run:
+```bash
+python -m app.main desktop --config ./config.json --output-root ./output
+```
+
+In UI you can:
+- set reference image and entities
+- run new iterations
+- review per-icon quality status
+- inspect debug intermediates (`gray`, `mask_raw`, `mask_clean`, `crop`, `norm`)
+- open preview HTML, output folder, ZIP
+
+## CLI One-Click
 
 ```bash
 python -m app.main one-click --reference ./assets/base_pack/reference_grid.png --entities "Defense Equipment Manufacturer; Defence Tech Startup; Dual-Use Technology"
 ```
 
-Or use PowerShell wrapper (button-like entry):
+Or PowerShell wrapper:
 
 ```powershell
 .\Start-IconPreview.ps1 -Reference .\assets\base_pack\reference_grid.png -EntitiesFile .\assets\examples\new_icons.txt
 ```
-
-Result:
-- `output/<session>/preview.html`
-- `output/<session>/manifest.json`
-- `output/<session>/icon_pack_bundle.zip`
 
 ## Generation Providers
 
@@ -50,23 +54,13 @@ Then set in `config.json`:
 
 ## Iteration Loop
 
-1. Open `preview.html`
-2. For weak icons, put manual replacement SVG into:
-   - `output/<session>/curated_svgs/<slug>.svg`
-3. Rebuild preview only:
+1. Generate a new iteration (Desktop UI or CLI).
+2. Open `output/<session>/preview.html`.
+3. If needed, put manual SVG override to `output/<session>/curated_svgs/<slug>.svg`.
+4. Rebuild preview only:
 
 ```bash
 python -m app.main preview --config ./config.json --reference ./assets/base_pack/reference_grid.png --output ./output/<session>
-```
-
-## Classic Commands
-
-```bash
-python -m app.main full-run --config ./config.json --reference ./assets/base_pack/reference_grid.png --requests ./assets/examples/new_icons.json --output ./output/run_001
-python -m app.main generate  --config ./config.json --reference ./assets/base_pack/reference_grid.png --requests ./assets/examples/new_icons.json --output ./output/run_001
-python -m app.main vectorize --config ./config.json --requests ./assets/examples/new_icons.json --output ./output/run_001
-python -m app.main preview   --config ./config.json --reference ./assets/base_pack/reference_grid.png --output ./output/run_001
-python -m app.main package   --config ./config.json --output ./output/run_001
 ```
 
 ## Requirements

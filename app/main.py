@@ -58,7 +58,17 @@ def main() -> None:
     p_one.add_argument("--session-name", default=None, help="Optional session folder name")
     p_one.add_argument("--force", action="store_true", help="Force regenerate cached artifacts")
 
+    p_desktop = sub.add_parser("desktop", help="Launch desktop UI")
+    p_desktop.add_argument("--config", type=str, default=None, help="Path to JSON config")
+    p_desktop.add_argument("--output-root", type=str, default="output", help="Root folder for iteration sessions")
+
     args = parser.parse_args()
+
+    if args.command == "desktop":
+        from .desktop_app import launch_desktop
+
+        launch_desktop(config_path=args.config, output_root=Path(args.output_root))
+        return
 
     if args.command == "one-click":
         cfg = AppConfig.load(args.config)
