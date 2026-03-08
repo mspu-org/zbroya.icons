@@ -4,7 +4,7 @@ One-command pipeline for extending an icon pack from a reference style set.
 
 ## Desktop UI (Recommended)
 
-Launch desktop app:
+Run from source:
 
 ```bash
 python -m app.main desktop --config ./config.json --output-root ./output
@@ -16,6 +16,19 @@ In UI you can:
 - review per-icon quality status
 - inspect debug intermediates (`gray`, `mask_raw`, `mask_clean`, `crop`, `norm`)
 - open preview HTML, output folder, ZIP
+
+## Build Windows EXE
+
+Build command:
+
+```powershell
+.\build-exe.ps1
+```
+
+Output executable:
+- `dist\IconPackStudio.exe`
+
+No console window, full GUI app.
 
 ## CLI One-Click
 

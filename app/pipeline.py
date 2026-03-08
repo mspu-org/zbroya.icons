@@ -8,6 +8,7 @@ from .generation import create_generator, generate_icons
 from .normalize import choose_svg_for_preview
 from .packaging import build_zip
 from .preview import build_preview_sheet, compactness, raster_similarity, render_preview_html
+from .runtime import resolve_project_path
 from .schemas import IconManifestItem, IconRequest, Manifest, QualityMetrics
 from .segmentation import preprocess_png
 from .utils.logging import get_logger
@@ -172,7 +173,7 @@ def run_preview(
 
     render_preview_html(
         output_html=output_dir / "preview.html",
-        template_dir=Path("templates"),
+        template_dir=resolve_project_path("templates"),
         title="Icon Pack Extension Preview",
         items=preview_items,
         summary=summary,
@@ -205,4 +206,3 @@ def run_full(
     run_package(output_dir)
     manifest.write(output_dir / "manifest.json")
     return manifest
-

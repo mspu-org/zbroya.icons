@@ -11,6 +11,9 @@ venv/
 output/
 tmp/
 *.log
+build/
+dist/
+*.spec
 
 # OS/IDE
 .DS_Store

@@ -54,7 +54,12 @@ class AppConfig(BaseModel):
     def load(cls, path: str | Path | None) -> "AppConfig":
         if path is None:
             return cls()
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
+
+        p = Path(path)
+        if not p.exists():
+            return cls()
+
+        data = json.loads(p.read_text(encoding="utf-8"))
         return cls.model_validate(data)
 
     def dump_json(self, path: str | Path) -> None:
