@@ -1,0 +1,5 @@
+﻿pillow
+numpy
+jinja2
+pydantic
+opencv-python

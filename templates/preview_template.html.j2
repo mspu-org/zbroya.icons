@@ -1,0 +1,74 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <style>
+    :root {
+      --bg: #f4f5f6;
+      --card: #ffffff;
+      --ink: #1a1a1a;
+      --muted: #667085;
+      --ok: #067647;
+      --warn: #b54708;
+      --bad: #b42318;
+      --line: #d0d5dd;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: radial-gradient(circle at 0% 0%, #f0f4f8, #f7f7f8 55%, #ededee); color: var(--ink); }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+    .sum-card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+    .sum-card .k { color: var(--muted); font-size: 12px; }
+    .sum-card .v { font-weight: 700; font-size: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .preview { height: 220px; display: grid; place-items: center; background: #eef0f2; padding: 20px; }
+    .preview svg { width: 170px; height: 170px; }
+    .body { padding: 12px; }
+    .title { font-weight: 600; margin-bottom: 4px; }
+    .meta { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .q-good { color: var(--ok); background: #ecfdf3; }
+    .q-needs_cleanup { color: var(--warn); background: #fffaeb; }
+    .q-bad_trace { color: var(--bad); background: #fef3f2; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+    td { border-top: 1px solid var(--line); padding: 4px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>{{ title }}</h1>
+    <div>Reference: {{ summary.reference }}</div>
+    <div class="summary">
+      <div class="sum-card"><div class="k">Total</div><div class="v">{{ summary.total }}</div></div>
+      <div class="sum-card"><div class="k">Good</div><div class="v">{{ summary.good }}</div></div>
+      <div class="sum-card"><div class="k">Needs cleanup</div><div class="v">{{ summary.needs_cleanup }}</div></div>
+      <div class="sum-card"><div class="k">Bad trace</div><div class="v">{{ summary.bad_trace }}</div></div>
+      <div class="sum-card"><div class="k">Manual overrides</div><div class="v">{{ summary.manual_overrides }}</div></div>
+    </div>
+
+    <section class="grid">
+      {% for item in items %}
+      <article class="card">
+        <div class="preview">{{ item.svg_inline | safe }}</div>
+        <div class="body">
+          <div class="title">{{ item.title }}</div>
+          <div class="meta">{{ item.slug }} • {{ item.filename }}</div>
+          <span class="badge q-{{ item.quality }}">{{ item.badge }}</span>
+          <table>
+            <tr><td>Nodes</td><td>{{ item.metrics.nodes }}</td></tr>
+            <tr><td>Regions</td><td>{{ item.metrics.connected_regions }}</td></tr>
+            <tr><td>Small holes</td><td>{{ item.metrics.small_holes }}</td></tr>
+            <tr><td>Compactness</td><td>{{ "%.3f"|format(item.metrics.compactness) }}</td></tr>
+            <tr><td>Raster similarity</td><td>{{ "%.3f"|format(item.metrics.raster_similarity) }}</td></tr>
+          </table>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+  </div>
+</body>
+</html>

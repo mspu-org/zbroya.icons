@@ -1,4 +1,4 @@
-﻿# zbroya.icons
+﻿# Icon Pack Extension Tool
 
 One-command pipeline for extending an icon pack from a reference style set.
 
@@ -35,6 +35,16 @@ Result:
 ```bash
 python -m app.main preview --config ./config.json --reference ./assets/base_pack/reference_grid.png --output ./output/<session>
 ```
+
+## Full Pipeline Internals
+
+The pipeline still contains modular stages:
+- generation (single icon mode)
+- pre-vector cleanup (threshold + component selection + normalization)
+- SVG vectorization
+- quality scoring (`good`, `needs_cleanup`, `bad_trace`)
+- inline-SVG HTML preview
+- ZIP packaging
 
 ## Classic Commands
 

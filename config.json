@@ -1,0 +1,29 @@
+﻿{
+  "canvas_size": 512,
+  "fill_color": "#1A1A1A",
+  "padding_ratio": 0.12,
+  "mode": "curated",
+  "generation": {
+    "transparent_background": true,
+    "size": 1024,
+    "single_icon_mode": true
+  },
+  "vectorization": {
+    "use_potrace": true,
+    "turdsize": 8,
+    "approx_epsilon": 1.5,
+    "keep_holes_above_area": 60
+  },
+  "cleanup": {
+    "remove_components_below_area": 40,
+    "close_kernel": 3
+  },
+  "quality": {
+    "max_nodes_warning": 1200,
+    "max_small_holes_warning": 12
+  },
+  "preview": {
+    "card_size": 220,
+    "background": "#e7e7e7"
+  }
+}
