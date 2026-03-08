@@ -4,9 +4,13 @@
   "padding_ratio": 0.12,
   "mode": "curated",
   "generation": {
+    "provider": "mock",
     "transparent_background": true,
     "size": 1024,
-    "single_icon_mode": true
+    "single_icon_mode": true,
+    "openai_model": "gpt-image-1",
+    "openai_base_url": "https://api.openai.com/v1",
+    "openai_api_key_env": "OPENAI_API_KEY"
   },
   "vectorization": {
     "use_potrace": true,

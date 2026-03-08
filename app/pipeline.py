@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from .config import AppConfig
-from .generation import MockImageGenerator, generate_icons
+from .generation import create_generator, generate_icons
 from .normalize import choose_svg_for_preview
 from .packaging import build_zip
 from .preview import build_preview_sheet, compactness, raster_similarity, render_preview_html
@@ -43,7 +43,7 @@ def run_generate(
     logger = get_logger()
     requests = _load_requests(requests_path)
     generated_dir = output_dir / "generated_png"
-    generator = MockImageGenerator()
+    generator = create_generator(cfg.generation)
     reference_images = [str(reference)] if reference.exists() else []
     results = generate_icons(
         requests=requests,
@@ -205,3 +205,4 @@ def run_full(
     run_package(output_dir)
     manifest.write(output_dir / "manifest.json")
     return manifest
+

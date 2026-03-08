@@ -15,13 +15,29 @@
     [switch]$Force
 )
 
-$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-if (-not $pythonCmd) {
-    $pythonCmd = Get-Command py -ErrorAction SilentlyContinue
+function Resolve-PythonExe {
+    $cmd = Get-Command python -ErrorAction SilentlyContinue
+    if ($cmd) {
+        return $cmd.Source
+    }
+
+    $candidatePaths = @(
+        "C:\Program Files\Python312\python.exe",
+        "C:\Program Files\Python311\python.exe",
+        "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe",
+        "$env:LOCALAPPDATA\Programs\Python\Python311\python.exe"
+    )
+
+    foreach ($path in $candidatePaths) {
+        if (Test-Path $path) {
+            return $path
+        }
+    }
+
+    throw "Python not found. Install Python 3.11+ and ensure python.exe is available."
 }
-if (-not $pythonCmd) {
-    throw "Python not found in PATH. Install Python 3.11+ and try again."
-}
+
+$pythonExe = Resolve-PythonExe
 
 $argsList = @("-m", "app.main", "one-click", "--reference", $Reference, "--config", $Config)
 
@@ -41,4 +57,4 @@ if ($Force) {
     $argsList += "--force"
 }
 
-& $pythonCmd.Source @argsList
+& $pythonExe @argsList

@@ -8,9 +8,13 @@ from pydantic import BaseModel, Field
 
 
 class GenerationConfig(BaseModel):
+    provider: Literal["mock", "openai"] = "mock"
     transparent_background: bool = True
     size: int = 1024
     single_icon_mode: bool = True
+    openai_model: str = "gpt-image-1"
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_api_key_env: str = "OPENAI_API_KEY"
 
 
 class VectorizationConfig(BaseModel):
